@@ -13,7 +13,7 @@ import java.util.ArrayList;
 
 
 @ScriptManifest(author = "Chas3down", category = Category.COMBAT, description = "Kill Shit", name = "Kill Shit", servers = { "PkHonor" }, version = 1)
-public class pots extends Script{
+public class cCombat extends Script{
 
     private final ArrayList<Strategy> strategies = new ArrayList<Strategy>();
     public final int MonsterID = 1459;
