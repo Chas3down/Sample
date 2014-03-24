@@ -13,7 +13,7 @@ import java.util.ArrayList;
 
 
 @ScriptManifest(author = "Chas3down", category = Category.COMBAT, description = "Kill Shit", name = "Kill Shit", servers = { "PkHonor" }, version = 1)
-public class cCombat extends Script{
+public class pots extends Script{
 
     private final ArrayList<Strategy> strategies = new ArrayList<Strategy>();
     public final int MonsterID = 1459;
@@ -56,7 +56,7 @@ public class cCombat extends Script{
                         return Inventory.getCount(FoodID) > 1
                                 && !Players.getLocal().isInCombat()
                                 && !Players.getLocal().isWalking()
-                                && getHp() >= MaxHL*EatLowPerct
+                                && currentHp() >= MaxHL*EatLowPerct
                                 && Players.getLocal().getAnimation() == -1;
 
                     }
@@ -106,7 +106,7 @@ public class cCombat extends Script{
         @Override
         public boolean activate() {
             if(Inventory.getCount(FoodID) >= 1){
-                return getHp() < MaxHL*EatLowPerct;
+                return currentHp() < MaxHL*EatLowPerct;
             }
 
             return false;
@@ -114,12 +114,12 @@ public class cCombat extends Script{
 
         @Override
         public void execute() {
-            if(Inventory.getCount(FoodID) >= 1 && getHp() < MaxHL*EatLowPerct) {
+            if(Inventory.getCount(FoodID) >= 1 && currentHp() < MaxHL*EatLowPerct) {
                 if(!Tab.INVENTORY.isOpen()){
                     Tab.INVENTORY.open();
                 }else{
                     for(final Item i : Inventory.getItems(FoodID)) {
-                        if(getHp() < MaxHL*EatTopPerct){
+                        if(currentHp() < MaxHL*EatTopPerct){
                             i.interact("Eat");
                             sleep(1000);
                         }
@@ -136,7 +136,7 @@ public class cCombat extends Script{
         @Override
         public boolean activate() {
 
-            if(getHp() >= MaxHL*EatLowPerct){
+            if(currentHp() >= MaxHL*EatLowPerct){
                 if(Inventory.getCount(StrengthID) >= 1 || Inventory.getCount(AttackID) >= 1){
                     return Skill.STRENGTH.getLevel() <= Skill.STRENGTH.getRealLevel()
                             || Skill.ATTACK.getLevel() <= Skill.ATTACK.getRealLevel();
@@ -149,7 +149,7 @@ public class cCombat extends Script{
 
         @Override
         public void execute() {
-            if(getHp() >= MaxHL*EatLowPerct){
+            if(currentHp() >= MaxHL*EatLowPerct){
                 if(Skill.ATTACK.getLevel() <= Skill.ATTACK.getRealLevel() && Inventory.getCount(AttackID) >= 1){
                     for(final Item i : Inventory.getItems(AttackID)) {
                         if(!Tab.INVENTORY.isOpen()){
@@ -177,7 +177,7 @@ public class cCombat extends Script{
     }
 
 
-    public static final int getHp() {
+    public static final int currentHp() {
         String CurrentHp = Interfaces.get(3918).getChildren()[11].getText();
         CurrentHp = CurrentHp.replace("@whi@", "");
         return Integer.parseInt(CurrentHp);
