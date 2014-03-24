@@ -1,4 +1,3 @@
-
 import org.parabot.environment.api.utils.Filter;
 import org.parabot.environment.scripts.Script;
 import org.parabot.environment.scripts.framework.Strategy;
@@ -197,7 +196,7 @@ public class cCombat extends Script{
             }
 
             if (bankbooth == null)  {
-                //Tab.MAGIC hook must be broken, isn't working as intended..
+                //Tab.MAGIC.open isn't working as intended..
                 if(!Tab.MAGIC.isOpen()){
                     Tab.MAGIC.open();
                     sleep(500);
