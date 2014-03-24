@@ -18,11 +18,9 @@ public class cCombat extends Script{
     private final ArrayList<Strategy> strategies = new ArrayList<Strategy>();
     public final int MonsterID = 1459;
     public final int FoodID = 379;
-    public final int[] LootID = {1,2,3};
     public final int[] StrengthID = {113,115,117,119};
     public final int[] AttackID = {2428,121,123,125};
     public final int MaxHL = Players.getLocal().getMaxHealth();
-    public final int LowHP = 10;
     public final double EatLowPerct = .50;
     public final double EatTopPerct = .75;
 
@@ -30,14 +28,11 @@ public class cCombat extends Script{
     @Override
     public boolean onExecute() {
 
-            Item[] i = Inventory.getItems();
-
-                i[0].interact("Drink");
 
         strategies.add(new Attack());
         strategies.add(new Eat());
         strategies.add(new Drink());
-        strategies.add(new Loot());
+
         provide(strategies);
 
 
@@ -110,7 +105,7 @@ public class cCombat extends Script{
 
         @Override
         public boolean activate() {
-            if(Inventory.getCount(379) >= 1){
+            if(Inventory.getCount(FoodID) >= 1){
                 return getHp() < MaxHL*EatLowPerct;
             }
 
@@ -119,11 +114,11 @@ public class cCombat extends Script{
 
         @Override
         public void execute() {
-            if(Inventory.getCount(379) >= 1 && getHp() < MaxHL*EatLowPerct) {
+            if(Inventory.getCount(FoodID) >= 1 && getHp() < MaxHL*EatLowPerct) {
                 if(!Tab.INVENTORY.isOpen()){
                     Tab.INVENTORY.open();
                 }else{
-                    for(final Item i : Inventory.getItems(379)) {
+                    for(final Item i : Inventory.getItems(FoodID)) {
                         if(getHp() < MaxHL*EatTopPerct){
                             i.interact("Eat");
                             sleep(1000);
@@ -181,21 +176,6 @@ public class cCombat extends Script{
         }
     }
 
-    class Loot implements Strategy {
-
-
-        @Override
-        public boolean activate() {
-
-
-            return false;
-        }
-
-        @Override
-        public void execute() {
-
-        }
-    }
 
     public static final int getHp() {
         String CurrentHp = Interfaces.get(3918).getChildren()[11].getText();
