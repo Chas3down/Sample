@@ -178,8 +178,7 @@ public class pots extends Script{
 
 
     public static final int currentHp() {
-        String CurrentHp = Interfaces.get(3918).getChildren()[11].getText();
-        CurrentHp = CurrentHp.replace("@whi@", "");
+        String CurrentHp = Interfaces.get(3918).getChildren()[11].getText().replace("@whi@", "");
         return Integer.parseInt(CurrentHp);
     }
 
