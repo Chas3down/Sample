@@ -165,7 +165,7 @@ public class cCombat extends Script{
                     }
                 }
                 if(Skill.STRENGTH.getLevel() <= Skill.STRENGTH.getRealLevel() && Inventory.getCount(StrengthID) >= 1){
-                    for(final Item i : Inventory.getItems(AttackID)) {
+                    for(final Item i : Inventory.getItems(StrengthID)) {
                         if(!Tab.INVENTORY.isOpen()){
                             Tab.INVENTORY.open();
                         }
