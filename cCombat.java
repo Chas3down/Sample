@@ -1,6 +1,5 @@
 import org.parabot.environment.api.interfaces.Paintable;
 import org.parabot.environment.api.utils.Filter;
-import org.parabot.environment.input.Mouse;
 import org.parabot.environment.scripts.Script;
 import org.parabot.environment.scripts.framework.Strategy;
 import org.parabot.environment.scripts.Category;
@@ -20,7 +19,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 
-@ScriptManifest(author = "Chas3down", category = Category.COMBAT, description = "5", name = "zze55", servers = { "PkHonor" }, version = 1)
+@ScriptManifest(author = "Chas3down", category = Category.COMBAT, description = "5", name = "good", servers = { "PkHonor" }, version = 1)
 public class cCombat extends Script implements Paintable {
 
     private final ArrayList<Strategy> strategies = new ArrayList<Strategy>();
@@ -34,6 +33,7 @@ public class cCombat extends Script implements Paintable {
     public final double EatTopPerct = .75;
     public final long startTime = System.currentTimeMillis();
     public final int startExp = Skill.DEFENSE.getExperience();
+
 
     public boolean onExecute() {
 
@@ -55,59 +55,33 @@ public class cCombat extends Script implements Paintable {
 
     }
 
-    private final Color colorBackGround = new Color(0, 0, 0);
-    private final Color colorFont = new Color(255, 255, 255);
-    private final BasicStroke stroke1 = new BasicStroke(1);
-    private final Font font = new Font("", 0, 12);
-    private final Image background = getImage("http://i.imgur.com/H4US5Pa.png"); //Replace url by the image's url
-
-    public Image getImage(String url) {
-        try { return ImageIO.read(new URL(url)); }
-        catch(IOException e) { return null; }
-    }
-
-
-
-    public String formatNumber(int start) {
-        DecimalFormat nf = new DecimalFormat("0.00");
-        double i = start;
-        if(i >= 1000000) {
-            return nf.format((i / 1000000)) + "m";
-        }
-        if(i >=  0) {
-            return nf.format((i / 1000)) + "k";
-        }
-        return ""+start;
-    }
-
-    public String perHour(int gained) {
-        return formatNumber((int) ((gained) * 3600000D / (System.currentTimeMillis() - startTime)));
-    }
-
     @Override
     public void paint(Graphics g1){
-        //Just imported over from a differnt script of mine, I know the image doesn't match the script...
+        final Color colorBackGround = new Color(0, 0, 0);
+        final Color colorFont = new Color(255, 255, 255);
+        final BasicStroke stroke1 = new BasicStroke(1);
+        final Font font = new Font("", 0, 12);
+        final Image background = getImage("http://i.imgur.com/H4US5Pa.png");
 
         int expGained = Skill.DEFENSE.getExperience() - startExp;
         long millis = System.currentTimeMillis() - startTime;
         long second = (millis / 1000) % 60;
         long minute = (millis / (1000 * 60)) % 60;
         long hour = (millis / (1000 * 60 * 60)) % 24;
+
         String time = String.format("%02d:%02d:%02d", hour, minute, second);
         Graphics2D g = (Graphics2D)g1;
+
         g.drawImage(background, 559, 215, null);
         g.setColor(colorBackGround);
         g.setStroke(stroke1);
         g.setFont(font);
         g.setColor(colorFont);
-        Integer expHour = expGained;
-
 
         g.drawString(time, 654,279);
-        g.drawString(formatNumber(expHour).toString(), 663, 359);
+        g.drawString(formatNumber(expGained), 663, 359);
         g.drawString("1.60", 705,452);
         g.drawString(perHour(expGained), 663,319);
-
 
     }
 
@@ -134,7 +108,7 @@ public class cCombat extends Script implements Paintable {
 
         @Override
         public void execute() {
-
+            if(Npcs.getNearest(MonsterID) != null) {
             Npc[] npc = Npcs.getNearest(new Filter<Npc>() {
                 @Override
                 public boolean accept(final Npc npc) {
@@ -155,6 +129,7 @@ public class cCombat extends Script implements Paintable {
                     MonsterA.interact("Attack");
                 }
                 sleep(4000);
+            }
             }
         }
     }
@@ -291,6 +266,27 @@ public class cCombat extends Script implements Paintable {
 
     public void stopScript() {
         provide(null);
+    }
+
+    public Image getImage(String url) {
+        try { return ImageIO.read(new URL(url)); }
+        catch(IOException e) { return null; }
+    }
+
+    public String formatNumber(int start) {
+        DecimalFormat nf = new DecimalFormat("0.00");
+        double i = start;
+        if(i >= 1000000) {
+            return nf.format((i / 1000000)) + "m";
+        }
+        if(i >=  0) {
+            return nf.format((i / 1000)) + "k";
+        }
+        return ""+start;
+    }
+
+    public String perHour(int gained) {
+        return formatNumber((int) ((gained) * 3600000D / (System.currentTimeMillis() - startTime)));
     }
 
 }
