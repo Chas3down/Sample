@@ -1,6 +1,7 @@
 package cCombat;
 
 
+import org.parabot.core.ui.components.LogArea;
 import org.parabot.environment.api.interfaces.Paintable;
 import org.parabot.environment.api.utils.Filter;
 import org.parabot.environment.scripts.Script;
@@ -8,6 +9,7 @@ import org.parabot.environment.scripts.framework.Strategy;
 import org.parabot.environment.scripts.Category;
 import org.parabot.environment.scripts.ScriptManifest;
 import org.rev317.api.methods.*;
+import org.rev317.api.methods.Menu;
 import org.rev317.api.wrappers.hud.Item;
 import org.rev317.api.wrappers.hud.Tab;
 import org.rev317.api.wrappers.interactive.Npc;
@@ -22,7 +24,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 
-@ScriptManifest(author = "Chas3down", category = Category.COMBAT, description = "5", name = "the big D", servers = {"PkHonor"}, version = 1)
+@ScriptManifest(author = "Chas3down", category = Category.COMBAT, description = "5", name = "bigD", servers = {"PkHonor"}, version = 1)
 public class cCombat extends Script implements Paintable {
 
     private final ArrayList<Strategy> strategies = new ArrayList<Strategy>();
@@ -40,11 +42,12 @@ public class cCombat extends Script implements Paintable {
 
     public boolean onExecute() {
 
-
+        strategies.add(new Back());
         strategies.add(new Attack());
         strategies.add(new Eat());
         strategies.add(new Drink());
-        //strategies.add(new Banks());
+        strategies.add(new Banks());
+        strategies.add(new CloseBank());
 
         provide(strategies);
 
@@ -63,7 +66,7 @@ public class cCombat extends Script implements Paintable {
         final Color colorFont = new Color(255, 255, 255);
         final BasicStroke stroke1 = new BasicStroke(1);
         final Font font = new Font("", 0, 12);
-        final Image background = getImage("http://i.imgur.com/H4US5Pa.png");
+        //final Image background = getImage("http://i.imgur.com/H4US5Pa.png");
 
         int expGained = Skill.DEFENSE.getExperience() - startExp;
         long millis = System.currentTimeMillis() - startTime;
@@ -74,7 +77,7 @@ public class cCombat extends Script implements Paintable {
         String time = String.format("%02d:%02d:%02d", hour, minute, second);
         Graphics2D g = (Graphics2D) g1;
 
-        g.drawImage(background, 559, 215, null);
+        //g.drawImage(background, 559, 215, null);
         g.setColor(colorBackGround);
         g.setStroke(stroke1);
         g.setFont(font);
@@ -96,7 +99,7 @@ public class cCombat extends Script implements Paintable {
                 if (NPCArray.length > 0) {
                     for (Npc i : NPCArray) {
                         if (i != null && !i.isInCombat()) {
-                            return Inventory.getCount(FoodID) > 1
+                            return Inventory.getCount(FoodID) >= 1
                                     && !Players.getLocal().isInCombat()
                                     && !Players.getLocal().isWalking()
                                     && currentHp() >= MaxHP * EatLowPerct
@@ -126,7 +129,7 @@ public class cCombat extends Script implements Paintable {
                         Camera.turnTo(MonsterA);
                         sleep(1500);
                     }
-                    if (MonsterA != null && MonsterA.isOnScreen() && !Players.getLocal().isInCombat()
+                    if (MonsterA != null && MonsterA.getModel() != null && MonsterA.isOnScreen() && !Players.getLocal().isInCombat()
                             && !Players.getLocal().isWalking()) {
                         MonsterA.interact("Attack");
                     }
@@ -232,7 +235,7 @@ public class cCombat extends Script implements Paintable {
             if (bankbooth == null) {
                 //Tab.MAGIC hook must be broken, isn't working as intended..
                 if (!Tab.MAGIC.isOpen()) {
-                    Tab.MAGIC.open();
+                    Menu.interact("Magic", new Point(742,184));
                     sleep(500);
                 } else {
                     Magic.clickSpell(Magic.AncientMagic377.HOME_TELEPORT);
@@ -256,6 +259,46 @@ public class cCombat extends Script implements Paintable {
 
 
                 }
+            }
+
+        }
+    }
+
+    class CloseBank implements Strategy {
+
+        @Override
+        public boolean activate() {
+            return Bank.isOpen() && Inventory.getCount(FoodID) < 1;
+        }
+
+        @Override
+        public void execute() {
+            Bank.close();
+        }
+    }
+
+    class Back implements Strategy {
+
+        @Override
+        public boolean activate() {
+            if (Npcs.getNearest(MonsterID) != null && Npcs.getNearest(MonsterID).length < 1 && Inventory.getCount(FoodID) > 0){
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public void execute() {
+            if (!Tab.MAGIC.isOpen()) {
+                Menu.interact("Magic", new Point(742,184));
+                sleep(500);
+            } else {
+                Magic.clickSpell(Magic.AncientMagic377.SENNTISTEN_TELEPORT);
+                sleep(1000);
+            }
+            if (Interfaces.getChatboxInterface() != null && Interfaces.getChatboxInterface().isVisible()){
+                Menu.interact("Ok", new Point(265,380));
+                sleep(2500);
             }
 
         }
