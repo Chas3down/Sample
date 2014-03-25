@@ -12,11 +12,15 @@ import org.rev317.api.wrappers.interactive.Npc;
 import org.rev317.api.wrappers.scene.SceneObject;
 
 
+import javax.imageio.ImageIO;
 import java.awt.*;
+import java.io.IOException;
+import java.net.URL;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 
-@ScriptManifest(author = "Chas3down", category = Category.COMBAT, description = "5", name = "e", servers = { "PkHonor" }, version = 1)
+@ScriptManifest(author = "Chas3down", category = Category.COMBAT, description = "5", name = "zze55", servers = { "PkHonor" }, version = 1)
 public class cCombat extends Script implements Paintable {
 
     private final ArrayList<Strategy> strategies = new ArrayList<Strategy>();
@@ -28,10 +32,11 @@ public class cCombat extends Script implements Paintable {
     public final int MaxHP = Players.getLocal().getMaxHealth();
     public final double EatLowPerct = .50;
     public final double EatTopPerct = .75;
+    public final long startTime = System.currentTimeMillis();
+    public final int startExp = Skill.DEFENSE.getExperience();
 
-
-    @Override
     public boolean onExecute() {
+
 
         strategies.add(new Attack());
         strategies.add(new Eat());
@@ -40,17 +45,69 @@ public class cCombat extends Script implements Paintable {
 
         provide(strategies);
 
+
+
         return true;
     }
 
     @Override
     public void onFinish() {
-        LogArea.log("Ending program..");
+
+    }
+
+    private final Color colorBackGround = new Color(0, 0, 0);
+    private final Color colorFont = new Color(255, 255, 255);
+    private final BasicStroke stroke1 = new BasicStroke(1);
+    private final Font font = new Font("", 0, 12);
+    private final Image background = getImage("http://i.imgur.com/H4US5Pa.png"); //Replace url by the image's url
+
+    public Image getImage(String url) {
+        try { return ImageIO.read(new URL(url)); }
+        catch(IOException e) { return null; }
+    }
+
+
+
+    public String formatNumber(int start) {
+        DecimalFormat nf = new DecimalFormat("0.00");
+        double i = start;
+        if(i >= 1000000) {
+            return nf.format((i / 1000000)) + "m";
+        }
+        if(i >=  0) {
+            return nf.format((i / 1000)) + "k";
+        }
+        return ""+start;
+    }
+
+    public String perHour(int gained) {
+        return formatNumber((int) ((gained) * 3600000D / (System.currentTimeMillis() - startTime)));
     }
 
     @Override
-    public void paint(Graphics g) {
-        //Working on
+    public void paint(Graphics g1){
+        //Just imported over from a differnt script of mine, I know the image doesn't match the script...
+
+        int expGained = Skill.DEFENSE.getExperience() - startExp;
+        long millis = System.currentTimeMillis() - startTime;
+        long second = (millis / 1000) % 60;
+        long minute = (millis / (1000 * 60)) % 60;
+        long hour = (millis / (1000 * 60 * 60)) % 24;
+        String time = String.format("%02d:%02d:%02d", hour, minute, second);
+        Graphics2D g = (Graphics2D)g1;
+        g.drawImage(background, 559, 215, null);
+        g.setColor(colorBackGround);
+        g.setStroke(stroke1);
+        g.setFont(font);
+        g.setColor(colorFont);
+        Integer expHour = expGained;
+
+
+        g.drawString(time, 654,279);
+        g.drawString(formatNumber(expHour).toString(), 663, 359);
+        g.drawString("1.60", 705,452);
+        g.drawString(perHour(expGained), 663,319);
+
 
     }
 
@@ -59,17 +116,16 @@ public class cCombat extends Script implements Paintable {
         @Override
         public boolean activate() {
             if(Npcs.getNearest(MonsterID) != null){
-                Npc NPCArray[] = Npcs.getNearest(MonsterID);
-
+                final Npc[] NPCArray = Npcs.getNearest(MonsterID);
                 if (NPCArray.length > 0){
-                    Npc i = NPCArray[0];
-
-                    if(i != null  && i.getDef().getId() != 0 && !i.isInCombat()){
-                        return Inventory.getCount(FoodID) > 1
-                                && !Players.getLocal().isInCombat()
-                                && !Players.getLocal().isWalking()
-                                && currentHp() >= MaxHP*EatLowPerct
-                                && Players.getLocal().getAnimation() == -1;
+                    for(Npc i : NPCArray){
+                        if(i != null && !i.isInCombat()){
+                            return Inventory.getCount(FoodID) > 1
+                                    && !Players.getLocal().isInCombat()
+                                    && !Players.getLocal().isWalking()
+                                    && currentHp() >= MaxHP*EatLowPerct
+                                    && Players.getLocal().getAnimation() == -1;
+                        }
                     }
                 }
             }
