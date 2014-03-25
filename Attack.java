@@ -2,14 +2,8 @@ class Attack implements Strategy {
 
         public boolean activate() {
             if (Npcs.getNearest(MonsterID) != null && Npcs.getNearest(MonsterID).length > 0) {
-                Npc[] NPCArray = null;
-                
-                //Try catch this because wasn't sure how to fix it..(Null error once in a while)
-                try {
+
                 NPCArray = Npcs.getNearest(MonsterID);
-                } catch(Exception e) {
-                    LogArea.log(e.getLocalizedMessage());
-                }
 
                 if (NPCArray != null && NPCArray.length > 0) {
                     for (Npc i : NPCArray) {
@@ -44,17 +38,11 @@ class Attack implements Strategy {
                         Camera.turnTo(MonsterA);
                         sleep(1500);
                     }
-                    
-                    //Try catch this because wasn't sure how to fix it..(Null error once in a while)
-                    try {
+
                         if (MonsterA != null && MonsterA.getModel() != null && MonsterA.isOnScreen() && !Players.getLocal().isInCombat()
                                 && !Players.getLocal().isWalking()) {
-
                             MonsterA.interact("Attack");
                         }
-                    } catch (Exception e) {
-                        LogArea.log(e.getLocalizedMessage());
-                    }
 
                     sleep(4000);
                 }
