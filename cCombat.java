@@ -21,7 +21,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 
-@ScriptManifest(author = "Chas3down", category = Category.COMBAT, description = "5", name = "Almost done", servers = {"PkHonor"}, version = 1)
+@ScriptManifest(author = "Chas3down", category = Category.COMBAT, description = "Kills, drinks pots, and banks", name = "Goblin", servers = {"PkHonor"}, version = 1)
 public class cCombat extends Script implements Paintable {
 
     private final ArrayList<Strategy> strategies = new ArrayList<Strategy>();
@@ -124,7 +124,14 @@ public class cCombat extends Script implements Paintable {
                     }
                     if (MonsterA != null && MonsterA.getModel() != null && MonsterA.isOnScreen() && !Players.getLocal().isInCombat()
                             && !Players.getLocal().isWalking()) {
-                        MonsterA.interact("Attack");
+
+                        //This fucker was being a bitch so I just try/catched it YOLO
+                        try {
+                            MonsterA.interact("Attack");
+                        } catch (Exception e){
+                            LogArea.log(e.getMessage());
+                        }
+
                     }
                     sleep(4000);
                 }
