@@ -8,7 +8,7 @@ class Attack implements Strategy {
                 try {
                 NPCArray = Npcs.getNearest(MonsterID);
                 } catch(Exception e) {
-                    LogArea.log(e.getMessage());
+                    LogArea.log(e.getLocalizedMessage());
                 }
 
                 if (NPCArray != null && NPCArray.length > 0) {
@@ -53,9 +53,8 @@ class Attack implements Strategy {
                             MonsterA.interact("Attack");
                         }
                     } catch (Exception e) {
-                        LogArea.log(e.getMessage());
+                        LogArea.log(e.getLocalizedMessage());
                     }
-
 
                     sleep(4000);
                 }
