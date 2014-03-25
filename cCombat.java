@@ -16,10 +16,7 @@ import org.rev317.api.wrappers.interactive.Npc;
 import org.rev317.api.wrappers.scene.SceneObject;
 
 
-import javax.imageio.ImageIO;
 import java.awt.*;
-import java.io.IOException;
-import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
@@ -38,6 +35,10 @@ public class cCombat extends Script implements Paintable {
     public final double EatTopPerct = .75;
     public final long startTime = System.currentTimeMillis();
     public final int startExp = Skill.DEFENSE.getExperience();
+    public final int AirRune = 556;
+    public final int LawRune = 563;
+    public final int FullStrPot = 113;
+    public final int FullAttPot = 2428;
 
 
     public boolean onExecute() {
@@ -48,7 +49,6 @@ public class cCombat extends Script implements Paintable {
         strategies.add(new Drink());
         strategies.add(new Banks());
         strategies.add(new CloseBank());
-
         provide(strategies);
 
 
@@ -86,7 +86,6 @@ public class cCombat extends Script implements Paintable {
 
     class Attack implements Strategy {
 
-        @Override
         public boolean activate() {
             if (Npcs.getNearest(MonsterID) != null && Npcs.getNearest(MonsterID).length > 0) {
                 final Npc[] NPCArray = Npcs.getNearest(MonsterID);
@@ -183,12 +182,12 @@ public class cCombat extends Script implements Paintable {
         @Override
         public void execute() {
             if (currentHp() >= MaxHP * EatLowPerct) {
-                if (Skill.STRENGTH.getLevel() <= Skill.STRENGTH.getRealLevel() && Inventory.getCount(StrengthID) >= 1) {
+                if (Skill.STRENGTH.getLevel() <= Skill.STRENGTH.getRealLevel() + 1 && Inventory.getCount(StrengthID) >= 1) {
                     for (final Item i : Inventory.getItems(StrengthID)) {
                         if (!Tab.INVENTORY.isOpen()) {
                             Tab.INVENTORY.open();
                         }
-                        if (Skill.STRENGTH.getLevel() <= Skill.STRENGTH.getRealLevel() && Inventory.getCount(StrengthID) >= 1) {
+                        if (Skill.STRENGTH.getLevel() <= Skill.STRENGTH.getRealLevel() + 1 && Inventory.getCount(StrengthID) >= 1) {
                             i.interact("Drink");
                             sleep(1000);
                         }
@@ -205,7 +204,6 @@ public class cCombat extends Script implements Paintable {
                         }
                     }
                 }
-
             }
         }
     }
@@ -244,14 +242,26 @@ public class cCombat extends Script implements Paintable {
                     sleep(5000);
                 }
             } else if (Bank.isOpen()) {
-                if (Bank.getItem(FoodID).getStackSize() >= 1) {
+                if (!Inventory.isEmpty()){
+                    Bank.depositAll();
+                    sleep(500);
+                }
+                if (Bank.getItem(FoodID).getStackSize() >= 1 && Bank.getItem(AirRune).getStackSize() >= 1
+                        && Bank.getItem(LawRune).getStackSize() >= 1 && Bank.getItem(FullAttPot).getStackSize() >= 1
+                        && Bank.getItem(FullStrPot).getStackSize() >= 1) {
+                    Bank.getItem(LawRune).interact("Withdraw 5");
+                    sleep(500);
+                    Bank.getItem(AirRune).interact("Withdraw 10");
+                    sleep(500);
+                    Bank.getItem(FullAttPot).interact("Withdraw 1");
+                    sleep(500);
+                    Bank.getItem(FullStrPot).interact("Withdraw 1");
+                    sleep(500);
                     Bank.getItem(FoodID).interact("Withdraw All");
-                    sleep(1000);
+                    sleep(500);
                     Bank.close();
                 } else {
                     stopScript();
-
-
                 }
             }
 
@@ -292,7 +302,7 @@ public class cCombat extends Script implements Paintable {
             }
             if (Interfaces.getChatboxInterface() != null && Interfaces.getChatboxInterface().isVisible()){
                 Menu.interact("Ok", new Point(265,380));
-                sleep(2500);
+                sleep(4000);
             }
 
         }
@@ -305,14 +315,6 @@ public class cCombat extends Script implements Paintable {
 
     public void stopScript() {
         provide(null);
-    }
-
-    public Image getImage(String url) {
-        try {
-            return ImageIO.read(new URL(url));
-        } catch (IOException e) {
-            return null;
-        }
     }
 
     public String formatNumber(int start) {
