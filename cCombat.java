@@ -1,4 +1,6 @@
+import org.parabot.environment.api.interfaces.Paintable;
 import org.parabot.environment.api.utils.Filter;
+import org.parabot.environment.input.Mouse;
 import org.parabot.environment.scripts.Script;
 import org.parabot.environment.scripts.framework.Strategy;
 import org.parabot.environment.scripts.Category;
@@ -8,14 +10,14 @@ import org.rev317.api.wrappers.hud.Item;
 import org.rev317.api.wrappers.hud.Tab;
 import org.rev317.api.wrappers.interactive.Npc;
 import org.rev317.api.wrappers.scene.SceneObject;
-import org.rev317.api.wrappers.scene.Tile;
 
 
+import java.awt.*;
 import java.util.ArrayList;
 
 
-@ScriptManifest(author = "Chas3down", category = Category.COMBAT, description = "5", name = "agw", servers = { "PkHonor" }, version = 1)
-public class cCombat extends Script{
+@ScriptManifest(author = "Chas3down", category = Category.COMBAT, description = "5", name = "e", servers = { "PkHonor" }, version = 1)
+public class cCombat extends Script implements Paintable {
 
     private final ArrayList<Strategy> strategies = new ArrayList<Strategy>();
     public final int MonsterID = 101;
@@ -31,7 +33,6 @@ public class cCombat extends Script{
     @Override
     public boolean onExecute() {
 
-
         strategies.add(new Attack());
         strategies.add(new Eat());
         strategies.add(new Drink());
@@ -39,13 +40,17 @@ public class cCombat extends Script{
 
         provide(strategies);
 
-
-
         return true;
     }
 
     @Override
     public void onFinish() {
+        LogArea.log("Ending program..");
+    }
+
+    @Override
+    public void paint(Graphics g) {
+        //Working on
 
     }
 
@@ -53,19 +58,19 @@ public class cCombat extends Script{
 
         @Override
         public boolean activate() {
-            final Npc NPCArray[] = Npcs.getNearest(MonsterID);
-            if (NPCArray != null && NPCArray[0] != null && NPCArray[0].getName() != ""
-                    && NPCArray[0].getDef().getId() == MonsterID){
-                for(Npc i : NPCArray) {
-                  if(i != null && i.getDef().getId() != 0 && i.getDef().getId() == MonsterID) {
-                     if(!i.isInCombat()){
-                         return Inventory.getCount(FoodID) > 1
-                                    && !Players.getLocal().isInCombat()
-                                    && !Players.getLocal().isWalking()
-                                    && currentHp() >= MaxHP*EatLowPerct
-                                    && Players.getLocal().getAnimation() == -1;
-                     }
-                  }
+            if(Npcs.getNearest(MonsterID) != null){
+                Npc NPCArray[] = Npcs.getNearest(MonsterID);
+
+                if (NPCArray.length > 0){
+                    Npc i = NPCArray[0];
+
+                    if(i != null  && i.getDef().getId() != 0 && !i.isInCombat()){
+                        return Inventory.getCount(FoodID) > 1
+                                && !Players.getLocal().isInCombat()
+                                && !Players.getLocal().isWalking()
+                                && currentHp() >= MaxHP*EatLowPerct
+                                && Players.getLocal().getAnimation() == -1;
+                    }
                 }
             }
             return false;
@@ -84,28 +89,17 @@ public class cCombat extends Script{
             });
             if (npc != null && npc.length > 0){
                 Npc MonsterA = npc[0];
-                if (MonsterA.distanceTo() > 8){
-                    Tile MonsterTile = MonsterA.getLocation();
-                    MonsterTile.clickMM();
+                if (MonsterA != null && !MonsterA.isOnScreen() && !Players.getLocal().isWalking() ){
+                    MonsterA.getLocation().clickMM();
+                    Camera.turnTo(MonsterA);
                     sleep(1500);
                 }
-                if (!MonsterA.isOnScreen()){
-                    Camera.turnTo(MonsterA);
-                    sleep(1000);
-                }
-                if (MonsterA != null && MonsterA.isOnScreen() && !Players.getLocal().isWalking() &&
-                        !Players.getLocal().isInCombat() && Players.getLocal().getAnimation() == -1) {
+                if (MonsterA != null && MonsterA.isOnScreen() && !Players.getLocal().isInCombat()
+                        && !Players.getLocal().isWalking()) {
                     MonsterA.interact("Attack");
                 }
                 sleep(4000);
             }
-
-
-
-
-
-
-
         }
     }
 
@@ -233,7 +227,6 @@ public class cCombat extends Script{
 
         }
     }
-
 
     public static final int currentHp() {
         String CurrentHp = Interfaces.get(3918).getChildren()[11].getText().replace("@whi@", "");
