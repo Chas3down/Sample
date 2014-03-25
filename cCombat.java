@@ -8,20 +8,22 @@ import org.rev317.api.wrappers.hud.Item;
 import org.rev317.api.wrappers.hud.Tab;
 import org.rev317.api.wrappers.interactive.Npc;
 import org.rev317.api.wrappers.scene.SceneObject;
+import org.rev317.api.wrappers.scene.Tile;
 
 
 import java.util.ArrayList;
 
 
-@ScriptManifest(author = "Chas3down", category = Category.OTHER, description = "Kill Shit", name = "Kill Shit", servers = { "PkHonor" }, version = 1)
+@ScriptManifest(author = "Chas3down", category = Category.COMBAT, description = "5", name = "agw", servers = { "PkHonor" }, version = 1)
 public class cCombat extends Script{
 
     private final ArrayList<Strategy> strategies = new ArrayList<Strategy>();
-    public final int MonsterID = 1459;
+    public final int MonsterID = 101;
+    //public final int MonsterIDD[] = {1106,1107,1108,1109,1110,1111};
     public final int FoodID = 379;
     public final int[] StrengthID = {113,115,117,119};
     public final int[] AttackID = {2428,121,123,125};
-    public final int MaxHL = Players.getLocal().getMaxHealth();
+    public final int MaxHP = Players.getLocal().getMaxHealth();
     public final double EatLowPerct = .50;
     public final double EatTopPerct = .75;
 
@@ -51,25 +53,22 @@ public class cCombat extends Script{
 
         @Override
         public boolean activate() {
-            if (Npcs.getNearest(MonsterID) != null){
-                for(Npc i : Npcs.getNearest(MonsterID)) {
-                  if(i != null && i.getDef().getId() != 0) {
+            final Npc NPCArray[] = Npcs.getNearest(MonsterID);
+            if (NPCArray != null && NPCArray[0] != null && NPCArray[0].getName() != ""
+                    && NPCArray[0].getDef().getId() == MonsterID){
+                for(Npc i : NPCArray) {
+                  if(i != null && i.getDef().getId() != 0 && i.getDef().getId() == MonsterID) {
                      if(!i.isInCombat()){
                          return Inventory.getCount(FoodID) > 1
                                     && !Players.getLocal().isInCombat()
                                     && !Players.getLocal().isWalking()
-                                    && currentHp() >= MaxHL*EatLowPerct
+                                    && currentHp() >= MaxHP*EatLowPerct
                                     && Players.getLocal().getAnimation() == -1;
-
                      }
                   }
                 }
             }
-
-
-
             return false;
-
         }
 
         @Override
@@ -78,20 +77,27 @@ public class cCombat extends Script{
             Npc[] npc = Npcs.getNearest(new Filter<Npc>() {
                 @Override
                 public boolean accept(final Npc npc) {
-                    return (npc != null && npc.getDef().getId() == 0 &&!npc.isInCombat() && npc.getDef().getId() == MonsterID);
+                    return (npc != null && npc.getDef().getId() != 0 &&!npc.isInCombat() &&
+                            npc.getDef().getId() == MonsterID);
                 }
 
             });
             if (npc != null && npc.length > 0){
                 Npc MonsterA = npc[0];
+                if (MonsterA.distanceTo() > 8){
+                    Tile MonsterTile = MonsterA.getLocation();
+                    MonsterTile.clickMM();
+                    sleep(1500);
+                }
                 if (!MonsterA.isOnScreen()){
                     Camera.turnTo(MonsterA);
                     sleep(1000);
                 }
-                if (!Players.getLocal().isWalking() && !Players.getLocal().isInCombat() && Players.getLocal().getAnimation() == -1) {
+                if (MonsterA != null && MonsterA.isOnScreen() && !Players.getLocal().isWalking() &&
+                        !Players.getLocal().isInCombat() && Players.getLocal().getAnimation() == -1) {
                     MonsterA.interact("Attack");
                 }
-                sleep(2000);
+                sleep(4000);
             }
 
 
@@ -109,7 +115,7 @@ public class cCombat extends Script{
         @Override
         public boolean activate() {
             if(Inventory.getCount(FoodID) >= 1){
-                return currentHp() < MaxHL*EatLowPerct;
+                return currentHp() < MaxHP*EatLowPerct;
             }
 
             return false;
@@ -117,12 +123,12 @@ public class cCombat extends Script{
 
         @Override
         public void execute() {
-            if(Inventory.getCount(FoodID) >= 1 && currentHp() < MaxHL*EatLowPerct) {
+            if(Inventory.getCount(FoodID) >= 1 && currentHp() < MaxHP*EatLowPerct) {
                 if(!Tab.INVENTORY.isOpen()){
                     Tab.INVENTORY.open();
                 }else{
                     for(final Item i : Inventory.getItems(FoodID)) {
-                        if(currentHp() < MaxHL*EatTopPerct){
+                        if(currentHp() < MaxHP*EatTopPerct){
                             i.interact("Eat");
                             sleep(1000);
                         }
@@ -139,7 +145,7 @@ public class cCombat extends Script{
         @Override
         public boolean activate() {
 
-            if(currentHp() >= MaxHL*EatLowPerct && Inventory.getCount(FoodID) >= 1){
+            if(currentHp() >= MaxHP*EatLowPerct && Inventory.getCount(FoodID) >= 1){
                 if(Inventory.getCount(StrengthID) >= 1 || Inventory.getCount(AttackID) >= 1){
                     return Skill.STRENGTH.getLevel() <= Skill.STRENGTH.getRealLevel()
                             || Skill.ATTACK.getLevel() <= Skill.ATTACK.getRealLevel();
@@ -152,18 +158,7 @@ public class cCombat extends Script{
 
         @Override
         public void execute() {
-            if(currentHp() >= MaxHL*EatLowPerct){
-                if(Skill.ATTACK.getLevel() <= Skill.ATTACK.getRealLevel() && Inventory.getCount(AttackID) >= 1){
-                    for(final Item i : Inventory.getItems(AttackID)) {
-                        if(!Tab.INVENTORY.isOpen()){
-                            Tab.INVENTORY.open();
-                        }
-                        if(Skill.ATTACK.getLevel() <= Skill.ATTACK.getRealLevel() && Inventory.getCount(AttackID) >= 1){
-                            i.interact("Drink");
-                            sleep(1000);
-                        }
-                    }
-                }
+            if(currentHp() >= MaxHP*EatLowPerct){
                 if(Skill.STRENGTH.getLevel() <= Skill.STRENGTH.getRealLevel() && Inventory.getCount(StrengthID) >= 1){
                     for(final Item i : Inventory.getItems(StrengthID)) {
                         if(!Tab.INVENTORY.isOpen()){
@@ -175,6 +170,18 @@ public class cCombat extends Script{
                         }
                     }
                 }
+                if(Skill.ATTACK.getLevel() <= Skill.ATTACK.getRealLevel() && Inventory.getCount(AttackID) >= 1){
+                    for(final Item i : Inventory.getItems(AttackID)) {
+                        if(!Tab.INVENTORY.isOpen()){
+                            Tab.INVENTORY.open();
+                        }
+                        if(Skill.ATTACK.getLevel() <= Skill.ATTACK.getRealLevel() && Inventory.getCount(AttackID) >= 1){
+                            i.interact("Drink");
+                            sleep(1000);
+                        }
+                    }
+                }
+
             }
         }
     }
@@ -196,7 +203,7 @@ public class cCombat extends Script{
             }
 
             if (bankbooth == null)  {
-                //Tab.MAGIC.open isn't working as intended..
+                //Tab.MAGIC hook must be broken, isn't working as intended..
                 if(!Tab.MAGIC.isOpen()){
                     Tab.MAGIC.open();
                     sleep(500);
