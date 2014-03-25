@@ -24,12 +24,12 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 
-@ScriptManifest(author = "Chas3down", category = Category.COMBAT, description = "5", name = "bigD", servers = {"PkHonor"}, version = 1)
+@ScriptManifest(author = "Chas3down", category = Category.COMBAT, description = "5", name = "Almost done", servers = {"PkHonor"}, version = 1)
 public class cCombat extends Script implements Paintable {
 
     private final ArrayList<Strategy> strategies = new ArrayList<Strategy>();
     public final int MonsterID = 101;
-    //public final int MonsterIDD[] = {1106,1107,1108,1109,1110,1111};
+    //public final int MonsterID[] = {1106,1107,1108,1109,1110,1111};
     public final int FoodID = 379;
     public final int[] StrengthID = {113, 115, 117, 119};
     public final int[] AttackID = {2428, 121, 123, 125};
@@ -62,11 +62,8 @@ public class cCombat extends Script implements Paintable {
 
     @Override
     public void paint(Graphics g1) {
-        final Color colorBackGround = new Color(0, 0, 0);
-        final Color colorFont = new Color(255, 255, 255);
-        final BasicStroke stroke1 = new BasicStroke(1);
-        final Font font = new Font("", 0, 12);
-        //final Image background = getImage("http://i.imgur.com/H4US5Pa.png");
+        final Color colorFont = Color.GREEN;
+        final Font font = new Font("", Font.BOLD, 11);
 
         int expGained = Skill.DEFENSE.getExperience() - startExp;
         long millis = System.currentTimeMillis() - startTime;
@@ -77,16 +74,13 @@ public class cCombat extends Script implements Paintable {
         String time = String.format("%02d:%02d:%02d", hour, minute, second);
         Graphics2D g = (Graphics2D) g1;
 
-        //g.drawImage(background, 559, 215, null);
-        g.setColor(colorBackGround);
-        g.setStroke(stroke1);
         g.setFont(font);
         g.setColor(colorFont);
 
-        g.drawString(time, 654, 279);
-        g.drawString(formatNumber(expGained), 663, 359);
-        g.drawString("1.60", 705, 452);
-        g.drawString(perHour(expGained), 663, 319);
+        g.drawString("Runetime: " + time, 7,275);
+        g.drawString("Exp Gained: " + formatNumber(expGained), 7, 290);
+        g.drawString("Exp/Hr: " + perHour(expGained), 7, 305);
+        g.drawString("Version: 1.00", 7, 320);
 
     }
 
