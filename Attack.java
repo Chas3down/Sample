@@ -1,7 +1,7 @@
-    class Attack implements Strategy {
+ class Attack implements Strategy {
 
         public boolean activate() {
-            if (Npcs.getNearest(MonsterID) != null && Npcs.getNearest(MonsterID).length > 0) {
+            if (Npcs.getNearest(MonsterID) != null && Npcs.getNearest(MonsterID)[0].getDef().getId() != 0 && Npcs.getNearest(MonsterID).length > 0 ) {
 
                 final Npc[] NPCArray = Npcs.getNearest(MonsterID);
 
@@ -39,7 +39,7 @@
                         sleep(1500);
                     }
 
-                        if (MonsterA != null && MonsterA.getModel() != null && MonsterA.isOnScreen() && !Players.getLocal().isInCombat()
+                        if (MonsterA != null && MonsterA.getDef().getId() != 0 && MonsterA.getModel() != null && MonsterA.isOnScreen() && !Players.getLocal().isInCombat()
                                 && !Players.getLocal().isWalking()) {
 
                             MonsterA.interact("Attack");
