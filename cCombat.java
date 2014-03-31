@@ -123,8 +123,8 @@ public class cCombat extends Script implements Paintable {
                         Camera.turnTo(npc);
                         sleep(1500);
                     }
-                    if (npc != null && npc.getDef() != null && npc.getDef().getId() != 0 
-                            && npc.getModel() != null && npc.isOnScreen() && 
+                    if (npc != null && npc.getDef() != null && npc.getDef().getId() != 0
+                            && npc.getModel() != null && npc.isOnScreen() &&
                             !Players.getLocal().isInCombat() && !Players.getLocal().isWalking()) {
                         npc.interact("Attack");
                         sleep(4000);
@@ -214,7 +214,7 @@ public class cCombat extends Script implements Paintable {
 
         @Override
         public boolean activate() {
-            return Inventory.getCount(FOOD_ID) < 1 && Bank.getNearestBanks() == null;
+            return Inventory.getCount(FOOD_ID) < 1;
         }
 
         @Override
