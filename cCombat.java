@@ -171,9 +171,10 @@ public class cCombat extends Script implements Paintable {
         public boolean activate() {
 
             if (currentHp() >= MAX_HP * LOW_PRCT && Inventory.getCount(FOOD_ID) >= 1) {
-                if (Inventory.getCount(STRENGTH_ID) >= 1 || Inventory.getCount(ATTACK_ID) >= 1) {
-                    return Skill.STRENGTH.getLevel() <= Skill.STRENGTH.getRealLevel()
-                            || Skill.ATTACK.getLevel() <= Skill.ATTACK.getRealLevel();
+                if (Inventory.getCount(STRENGTH_ID) >= 1 && Skill.STRENGTH.getLevel() <= Skill.STRENGTH.getRealLevel()) {
+                    return true;
+                }else if (Inventory.getCount(ATTACK_ID) >= 1 && Skill.ATTACK.getLevel() <= Skill.ATTACK.getRealLevel()) {
+                    return true;
                 }
 
             }
@@ -234,7 +235,7 @@ public class cCombat extends Script implements Paintable {
                     Magic.clickSpell(Magic.AncientMagic377.HOME_TELEPORT);
                     sleep(2500);
                 }
-            } else if (bankbooth != null && !Bank.isOpen()) {
+            } else if (!Bank.isOpen()) {
                 if (!Bank.getBank().isOnScreen()) {
                     Camera.turnTo(Bank.getBank());
                     sleep(1000);
