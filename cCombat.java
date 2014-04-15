@@ -4,6 +4,7 @@ package cCombat;
 import org.parabot.core.ui.components.LogArea;
 import org.parabot.environment.api.interfaces.Paintable;
 import org.parabot.environment.api.utils.Filter;
+import org.parabot.environment.api.utils.Timer;
 import org.parabot.environment.scripts.Script;
 import org.parabot.environment.scripts.framework.Strategy;
 import org.parabot.environment.scripts.Category;
@@ -25,14 +26,13 @@ import java.util.ArrayList;
 public class cCombat extends Script implements Paintable {
 
     private final ArrayList<Strategy> strategies = new ArrayList<Strategy>();
+    public Timer timer = new Timer();
     public final int MONSTER_ID = 101;
     public final int FOOD_ID = 379;
     public final int[] STRENGTH_ID = {113, 115, 117, 119};
     public final int[] ATTACK_ID = {2428, 121, 123, 125};
-    public final int MAX_HP = Players.getLocal().getMaxHealth();
     public final double LOW_PRCT = .50;
     public final double HIGH_PRCT = .75;
-    public final long START_TIME = System.currentTimeMillis();
     public final int START_EXP = Skill.DEFENSE.getExperience();
     public final int AIR_RUNE_ID = 556;
     public final int LAW_RUNE_ID = 563;
@@ -41,13 +41,15 @@ public class cCombat extends Script implements Paintable {
 
 
     public boolean onExecute() {
+        timer.restart();
+        strategies.add(new Sleeping());
+        strategies.add(new GoBack());
+        strategies.add(new AttackNpc());
+        strategies.add(new EatFood());
+        strategies.add(new DrinkPot());
+        strategies.add(new GoBank());
+        strategies.add(new CloseBank());
 
-        strategies.add(new goBack());
-        strategies.add(new attackNpc());
-        strategies.add(new eatFood());
-        strategies.add(new drinkPot());
-        strategies.add(new goBank());
-        strategies.add(new closeBank());
         provide(strategies);
 
         return true;
@@ -64,29 +66,27 @@ public class cCombat extends Script implements Paintable {
         final Font font = new Font("", Font.BOLD, 11);
 
         int expGained = Skill.DEFENSE.getExperience() - START_EXP;
-        long millis = System.currentTimeMillis() - START_TIME;
-        long second = (millis / 1000) % 60;
-        long minute = (millis / (1000 * 60)) % 60;
-        long hour = (millis / (1000 * 60 * 60)) % 24;
 
-        String time = String.format("%02d:%02d:%02d", hour, minute, second);
         Graphics2D g = (Graphics2D) g1;
 
         g.setFont(font);
         g.setColor(colorFont);
 
-        g.drawString("Runetime: " + time, 7,275);
+        g.drawString("Runetime: " + timer.getElapsedTime(), 7,275);
         g.drawString("Exp Gained: " + formatNumber(expGained), 7, 290);
-        g.drawString("Exp/Hr: " + perHour(expGained), 7, 305);
+        g.drawString("Exp/Hr: " + timer.getPerHour(expGained), 7, 305);
         g.drawString("Version: 1.00", 7, 320);
 
     }
 
-    class attackNpc implements Strategy {
+    class AttackNpc implements Strategy {
+
+        final int MAX_HP = Players.getLocal().getMaxHealth();
 
         public boolean activate() {
-            if (Npcs.getNearest(MONSTER_ID) != null && Npcs.getNearest(MONSTER_ID)[0].getDef() != null
-                    && Npcs.getNearest(MONSTER_ID)[0].getDef().getId() != 0 &&Npcs.getNearest(MONSTER_ID).length > 0) {
+            if (Npcs.getNearest(MONSTER_ID) != null && Npcs.getNearest(MONSTER_ID).length > 0
+                    && Npcs.getNearest(MONSTER_ID)[0].getDef() != null
+                    && Npcs.getNearest(MONSTER_ID)[0].getDef().getId() != 0 ) {
 
                 Npc[] npcArray = Npcs.getNearest(MONSTER_ID);
 
@@ -111,32 +111,34 @@ public class cCombat extends Script implements Paintable {
                 final Npc[] npcArray = Npcs.getNearest(new Filter<Npc>() {
                     @Override
                     public boolean accept(final Npc npc) {
-                        return (npc != null && npc.getDef().getId() != 0 && !npc.isInCombat() &&
+                        return (npc != null && npc.getDef() != null &&
+                                npc.getDef().getId() != 0 && !npc.isInCombat() &&
                                 npc.getDef().getId() == MONSTER_ID);
                     }
 
                 });
                 if (npcArray != null && npcArray.length > 0) {
                     final Npc npc = npcArray[0];
-                    if (npc != null && !npc.isOnScreen() && !Players.getLocal().isWalking()) {
+                    if (npc != null && npc.getModel() != null && !npc.isOnScreen()
+                            && !Players.getLocal().isWalking()) {
                         npc.getLocation().clickMM();
                         Camera.turnTo(npc);
                         sleep(1500);
                     }
                     if (npc != null && npc.getDef() != null && npc.getDef().getId() != 0
-                            && npc.getModel() != null && npc.isOnScreen() &&
+                            && npc.getModel() != null && npc.isOnScreen() && Players.getLocal() != null &&
                             !Players.getLocal().isInCombat() && !Players.getLocal().isWalking()) {
                         npc.interact("Attack");
-                        sleep(4000);
+                        sleep(500);
                     }
                 }
             }
         }
     }
 
-    class eatFood implements Strategy {
+    class EatFood implements Strategy {
 
-
+        final int MAX_HP = Players.getLocal().getMaxHealth();
         @Override
         public boolean activate() {
             if (Inventory.getCount(FOOD_ID) >= 1) {
@@ -155,7 +157,9 @@ public class cCombat extends Script implements Paintable {
                     for (final Item i : Inventory.getItems(FOOD_ID)) {
                         if (currentHp() < MAX_HP * HIGH_PRCT) {
                             i.interact("Eat");
-                            sleep(1000);
+                            while (Players.getLocal().getAnimation() != -1){
+                            sleep(250);
+                            }
                         }
                     }
                 }
@@ -164,9 +168,9 @@ public class cCombat extends Script implements Paintable {
         }
     }
 
-    class drinkPot implements Strategy {
+    class DrinkPot implements Strategy {
 
-
+        final int MAX_HP = Players.getLocal().getMaxHealth();
         @Override
         public boolean activate() {
 
@@ -211,7 +215,7 @@ public class cCombat extends Script implements Paintable {
         }
     }
 
-    class goBank implements Strategy {
+    class GoBank implements Strategy {
 
         @Override
         public boolean activate() {
@@ -229,7 +233,7 @@ public class cCombat extends Script implements Paintable {
 
             if (bankbooth == null) {
                 if (!Tab.MAGIC.isOpen()) {
-                    Menu.interact("Magic", new Point(742,184));
+                    Menu.interact("Magic", new Point(742, 184));
                     sleep(500);
                 } else {
                     Magic.clickSpell(Magic.AncientMagic377.HOME_TELEPORT);
@@ -263,17 +267,18 @@ public class cCombat extends Script implements Paintable {
                     sleep(500);
                     Bank.close();
                 } else {
-                    stopScript();
+                    setState(Script.STATE_STOPPED);
                 }
             }
 
         }
     }
 
-    class closeBank implements Strategy {
+    class CloseBank implements Strategy {
 
         @Override
         public boolean activate() {
+
             return Bank.isOpen() && Inventory.getCount(FOOD_ID) >= 1;
         }
 
@@ -283,7 +288,7 @@ public class cCombat extends Script implements Paintable {
         }
     }
 
-    class goBack implements Strategy {
+    class GoBack implements Strategy {
 
         @Override
         public boolean activate() {
@@ -309,14 +314,25 @@ public class cCombat extends Script implements Paintable {
 
         }
     }
+    //Dynamic sleep
+    class Sleeping implements Strategy {
+
+        @Override
+        public boolean activate() {
+            return Players.getLocal().isWalking();  
+        }
+
+        @Override
+        public void execute() {
+            while(Players.getLocal().isWalking()){
+                sleep(500);
+            }
+        }
+    }
 
     public static int currentHp() {
         String CurrentHp = Interfaces.get(3918).getChildren()[11].getText().replace("@whi@", "");
         return Integer.parseInt(CurrentHp);
-    }
-
-    public void stopScript() {
-        provide(null);
     }
 
     public String formatNumber(int start) {
@@ -330,9 +346,4 @@ public class cCombat extends Script implements Paintable {
         }
         return "" + start;
     }
-
-    public String perHour(int gained) {
-        return formatNumber((int) ((gained) * 3600000D / (System.currentTimeMillis() - START_TIME)));
-    }
-
 }
