@@ -1,6 +1,3 @@
-package cCombat;
-
-
 import org.parabot.core.ui.components.LogArea;
 import org.parabot.environment.api.interfaces.Paintable;
 import org.parabot.environment.api.utils.Filter;
@@ -26,7 +23,7 @@ import java.util.ArrayList;
 public class cCombat extends Script implements Paintable {
 
     private final ArrayList<Strategy> strategies = new ArrayList<Strategy>();
-    public Timer timer = new Timer();
+    public Timer runTimer = new Timer();
     public final int MONSTER_ID = 101;
     public final int FOOD_ID = 379;
     public final int[] STRENGTH_ID = {113, 115, 117, 119};
@@ -41,14 +38,14 @@ public class cCombat extends Script implements Paintable {
 
 
     public boolean onExecute() {
-        timer.restart();
+        runTimer.restart();
         strategies.add(new Sleeping());
-        strategies.add(new GoBack());
-        strategies.add(new AttackNpc());
-        strategies.add(new EatFood());
-        strategies.add(new DrinkPot());
-        strategies.add(new GoBank());
-        strategies.add(new CloseBank());
+        strategies.add(new Back());
+        strategies.add(new Attack());
+        strategies.add(new Eat());
+        strategies.add(new Drink());
+        strategies.add(new Banks());
+        strategies.add(new Close());
 
         provide(strategies);
 
@@ -62,24 +59,24 @@ public class cCombat extends Script implements Paintable {
 
     @Override
     public void paint(Graphics g1) {
-        final Color colorFont = Color.GREEN;
-        final Font font = new Font("", Font.BOLD, 11);
+        final Color FONT_COLOR = Color.GREEN;
+        final Font DEF_FONT = new Font("", Font.BOLD, 11);
 
         int expGained = Skill.DEFENSE.getExperience() - START_EXP;
 
         Graphics2D g = (Graphics2D) g1;
 
-        g.setFont(font);
-        g.setColor(colorFont);
+        g.setFont(DEF_FONT);
+        g.setColor(FONT_COLOR);
 
-        g.drawString("Runetime: " + timer.getElapsedTime(), 7,275);
+        g.drawString("Runetime: " + runTimer.getElapsedTime(), 7,275);
         g.drawString("Exp Gained: " + formatNumber(expGained), 7, 290);
-        g.drawString("Exp/Hr: " + timer.getPerHour(expGained), 7, 305);
+        g.drawString("Exp/Hr: " + runTimer.getPerHour(expGained), 7, 305);
         g.drawString("Version: 1.00", 7, 320);
 
     }
 
-    class AttackNpc implements Strategy {
+    class Attack implements Strategy {
 
         final int MAX_HP = Players.getLocal().getMaxHealth();
 
@@ -88,10 +85,10 @@ public class cCombat extends Script implements Paintable {
                     && Npcs.getNearest(MONSTER_ID)[0].getDef() != null
                     && Npcs.getNearest(MONSTER_ID)[0].getDef().getId() != 0 ) {
 
-                Npc[] npcArray = Npcs.getNearest(MONSTER_ID);
+                final Npc[] NPC_ARRAY = Npcs.getNearest(MONSTER_ID);
 
-                if (npcArray != null && npcArray.length > 0) {
-                    for (Npc i : npcArray) {
+                if (NPC_ARRAY != null && NPC_ARRAY.length > 0) {
+                    for (Npc i : NPC_ARRAY) {
                         if (i != null && !i.isInCombat()) {
                             return Inventory.getCount(FOOD_ID) >= 1
                                     && !Players.getLocal().isInCombat()
@@ -108,7 +105,7 @@ public class cCombat extends Script implements Paintable {
         @Override
         public void execute() {
             if (Npcs.getNearest(MONSTER_ID) != null) {
-                final Npc[] npcArray = Npcs.getNearest(new Filter<Npc>() {
+                final Npc[] NPC_ARRAY = Npcs.getNearest(new Filter<Npc>() {
                     @Override
                     public boolean accept(final Npc npc) {
                         return (npc != null && npc.getDef() != null &&
@@ -117,26 +114,26 @@ public class cCombat extends Script implements Paintable {
                     }
 
                 });
-                if (npcArray != null && npcArray.length > 0) {
-                    final Npc npc = npcArray[0];
-                    if (npc != null && npc.getModel() != null && !npc.isOnScreen()
+                if (NPC_ARRAY != null && NPC_ARRAY.length > 0) {
+                    final Npc NPC = NPC_ARRAY[0];
+                    if (NPC != null && NPC.getModel() != null && !NPC.isOnScreen()
                             && !Players.getLocal().isWalking()) {
-                        npc.getLocation().clickMM();
-                        Camera.turnTo(npc);
-                        sleep(1500);
+                        NPC.getLocation().clickMM();
+                        Camera.turnTo(NPC);
+
                     }
-                    if (npc != null && npc.getDef() != null && npc.getDef().getId() != 0
-                            && npc.getModel() != null && npc.isOnScreen() && Players.getLocal() != null &&
-                            !Players.getLocal().isInCombat() && !Players.getLocal().isWalking()) {
-                        npc.interact("Attack");
-                        sleep(500);
+                    if (NPC != null && NPC.getDef() != null && NPC.getDef().getId() != 0
+                            && NPC.getModel() != null && NPC.isOnScreen() && Players.getLocal() != null &&
+                            !Players.getLocal().isInCombat() && !Players.getLocal().isWalking() && NPC.isOnScreen()) {
+                        NPC.interact("Attack");
+                        sleep(100);
                     }
                 }
             }
         }
     }
 
-    class EatFood implements Strategy {
+    class Eat implements Strategy {
 
         final int MAX_HP = Players.getLocal().getMaxHealth();
         @Override
@@ -157,6 +154,7 @@ public class cCombat extends Script implements Paintable {
                     for (final Item i : Inventory.getItems(FOOD_ID)) {
                         if (currentHp() < MAX_HP * HIGH_PRCT) {
                             i.interact("Eat");
+                            //Dynamic sleep
                             while (Players.getLocal().getAnimation() != -1){
                             sleep(250);
                             }
@@ -168,7 +166,7 @@ public class cCombat extends Script implements Paintable {
         }
     }
 
-    class DrinkPot implements Strategy {
+    class Drink implements Strategy {
 
         final int MAX_HP = Players.getLocal().getMaxHealth();
         @Override
@@ -196,7 +194,10 @@ public class cCombat extends Script implements Paintable {
                         }
                         if (Skill.STRENGTH.getLevel() <= Skill.STRENGTH.getRealLevel() + 1 && Inventory.getCount(STRENGTH_ID) >= 1) {
                             i.interact("Drink");
-                            sleep(1000);
+                            //Dynamic sleep
+                            while (Players.getLocal().getAnimation() != -1){
+                            sleep(100);
+                            }
                         }
                     }
                 }
@@ -207,7 +208,10 @@ public class cCombat extends Script implements Paintable {
                         }
                         if (Skill.ATTACK.getLevel() <= Skill.ATTACK.getRealLevel() && Inventory.getCount(ATTACK_ID) >= 1) {
                             i.interact("Drink");
-                            sleep(1000);
+                            //Dynamic sleep
+                            while (Players.getLocal().getAnimation() != -1){
+                                sleep(100);
+                            }
                         }
                     }
                 }
@@ -215,7 +219,7 @@ public class cCombat extends Script implements Paintable {
         }
     }
 
-    class GoBank implements Strategy {
+    class Banks implements Strategy {
 
         @Override
         public boolean activate() {
@@ -226,12 +230,12 @@ public class cCombat extends Script implements Paintable {
         public void execute() {
 
             final SceneObject[] banks = Bank.getNearestBanks();
-            SceneObject bankbooth = null;
+            SceneObject bankBooth = null;
             if (banks.length > 0) {
-                bankbooth = banks[0];
+                bankBooth = banks[0];
             }
 
-            if (bankbooth == null) {
+            if (bankBooth == null) {
                 if (!Tab.MAGIC.isOpen()) {
                     Menu.interact("Magic", new Point(742, 184));
                     sleep(500);
@@ -274,7 +278,7 @@ public class cCombat extends Script implements Paintable {
         }
     }
 
-    class CloseBank implements Strategy {
+    class Close implements Strategy {
 
         @Override
         public boolean activate() {
@@ -288,7 +292,7 @@ public class cCombat extends Script implements Paintable {
         }
     }
 
-    class GoBack implements Strategy {
+    class Back implements Strategy {
 
         @Override
         public boolean activate() {
@@ -301,31 +305,39 @@ public class cCombat extends Script implements Paintable {
         public void execute() {
             if (!Tab.MAGIC.isOpen()) {
                 Menu.interact("Magic", new Point(742,184));
-                sleep(500);
+                //Static sleep makes sense here..
+                sleep(200);
             } else {
                 Magic.clickSpell(Magic.AncientMagic377.SENNTISTEN_TELEPORT);
-                sleep(1000);
+                //Static sleep makes sense here..
+                sleep(200);
             }
             if (Interfaces.getChatboxInterface() != null && Interfaces.getChatboxInterface().isVisible()
                     && !Interfaces.getChatboxInterface().getText().contains("Congra")){
                 Menu.interact("Ok", new Point(265,380));
-                sleep(4000);
+                //Static sleep makes sense here..
+                sleep(250);
+                //Dynamic sleep until teleport is finished
+                while (Players.getLocal().getAnimation() != -1){
+                    sleep(100);
+                }
+
             }
 
         }
     }
-    //Dynamic sleep
+    //General dynamic sleep while moving
     class Sleeping implements Strategy {
 
         @Override
         public boolean activate() {
-            return Players.getLocal().isWalking();  
+            return Players.getLocal().isWalking();
         }
 
         @Override
         public void execute() {
             while(Players.getLocal().isWalking()){
-                sleep(500);
+                sleep(250);
             }
         }
     }
@@ -335,14 +347,14 @@ public class cCombat extends Script implements Paintable {
         return Integer.parseInt(CurrentHp);
     }
 
-    public String formatNumber(int start) {
-        DecimalFormat nf = new DecimalFormat("0.00");
-        double i = start;
-        if (i >= 1000000) {
-            return nf.format((i / 1000000)) + "m";
+    public String formatNumber(double start) {
+        DecimalFormat decFormat = new DecimalFormat("0.00");
+
+        if (start >= 1000000) {
+            return decFormat.format((start / 1000000)) + "m";
         }
-        if (i >= 0) {
-            return nf.format((i / 1000)) + "k";
+        if (start >= 0) {
+            return decFormat.format((start / 1000)) + "k";
         }
         return "" + start;
     }
